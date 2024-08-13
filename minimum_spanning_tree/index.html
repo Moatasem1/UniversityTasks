@@ -10,15 +10,46 @@
     <!-- Bootstrap CSS v5.2.1 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <main class="container">
-        <h1 class="text-capitalize text-center mt-3 lh-lg fw-bold">minimum spanning tree<br>Kruskal's Algorithm</h1>
-        <div class="" id="result"></div>
+    <main class="container py-5">
+        <div class="title d-flex align-items-center fs-1 gap-4 justify-content-center">
+            <i class="fa-solid fa-circle-nodes "></i>
+            <h1 class="text-capitalize fw-bold ">MST - Kruskal</h1>
+            <i class="fa-solid fa-circle-nodes"></i>
+        </div>
+        <div class="mt-5 py-4">
+            <h2 class="fw-semibold mb-4 text-capitalize text-center">Your graph input here</h2>
+            <textarea name="graph-inputs" id="graphInput" class="rounded p-3">
+1 2 1
+1 3 3
+1 7 2
+2 3 4</textarea>
+            <div class="d-grid">
+                <button type="button" name="generate MST" id="generateMSTBtn" class="btn main-btn mt-3 py-3">
+                    Generate MST
+                </button>
+            </div>
+
+        </div>
+        <div id="graphsWrapper" class="d-none">
+            <div class="mt-5">
+                <h3 class="fw-semibold">Original Graph:</h3>
+                <div class="rounded graph-wrapper" id="orginalGraph"></div>
+            </div>
+            <div class="mt-5">
+                <h3 class="fw-semibold">MST Graph:</h3>
+                <div class="rounded graph-wrapper" id="mstGraph"></div>
+            </div>
+        </div>
 
     </main>
-    <script src="main.js"></script>
+    <script src="kruskal.js"></script>
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
     <!-- Bootstrap JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
@@ -27,6 +58,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
         integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
         crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/6c455eb206.js" crossorigin="anonymous"></script>
 </body>
 
 </html>

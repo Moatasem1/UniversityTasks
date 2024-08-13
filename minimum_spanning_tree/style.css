@@ -1,0 +1,82 @@
+:root {
+    --main-blue-100: #3d52a0;
+    --main-blue-50: #7191e6;
+    --main-gray-100: #8697c3;
+    --main-gray-50: #adbada;
+    --main-pink: #eDe8f5;
+}
+
+body {
+    background-color: var(--main-pink);
+    color: var(--main-blue-100);
+}
+
+
+/* Text Color Classes */
+.clr-main-blue-100 {
+    color: var(--main-blue-100);
+}
+
+.clr-main-blue-50 {
+    color: var(--main-blue-50);
+}
+
+.clr-main-gray-100 {
+    color: var(--main-gray-100);
+}
+
+.clr-main-gray-50 {
+    color: var(--main-gray-50);
+}
+
+.clr-main-pink {
+    color: var(--main-pink);
+}
+
+/* Background Color Classes */
+.bg-main-blue-100 {
+    background-color: var(--main-blue-100);
+}
+
+.bg-main-blue-50 {
+    background-color: var(--main-blue-50);
+}
+
+.bg-main-gray-100 {
+    background-color: var(--main-gray-100);
+}
+
+.bg-main-gray-50 {
+    background-color: var(--main-gray-50);
+}
+
+.bg-main-pink {
+    background-color: var(--main-pink);
+}
+
+
+.graph-wrapper {
+    width: 100%;
+    height: 400px;
+    border: 2px solid var(--main-blue-100);
+    background-color: white;
+}
+
+#graphInput {
+    width: 100%;
+    max-height: 400px;
+    min-height: 200px;
+    height: 400px;
+    border: 2px solid var(--main-blue-100);
+}
+
+.main-btn {
+    background-color: var(--main-blue-100);
+    color: white;
+    transition: .3s;
+}
+
+.main-btn:hover {
+    background-color: #2e3f80;
+    color: white;
+}
