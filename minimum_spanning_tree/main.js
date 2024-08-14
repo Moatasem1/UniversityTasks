@@ -45,137 +45,135 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function getVerticesNumberInGraph(edges) {
-        if (!edges) return 0;
-
-        const vertices = new Set();
-        edges.forEach(edge => {
-            vertices.add(edge.vertex1);
-            vertices.add(edge.vertex2);
-        });
-
-        //in case user input have in non sequentail order
-        return Math.max(...vertices);
-    }
-
-    function MST(edges, skipEgde = null) {
-
-        edges.sort((edge1, edge2) => edge1.weight - edge2.weight);
-        let noOfVertces = getVerticesNumberInGraph(edges);
-        let dsuEdges = new DSU(noOfVertces);
-        let spanningTree = [];
-        let totalCost = 0;
-
-        for (const edge of edges) {
-
-            if (edge === skipEgde) {
-                continue;
-            }
-
-            if (!dsuEdges.inSameSet(edge.vertex1, edge.vertex2)) {
-                spanningTree.push(edge);
-                totalCost += edge.weight;
-                dsuEdges.union(edge.vertex1, edge.vertex2);
-            }
-
-
-            if (spanningTree.length == noOfVertces - 1)
-                break;
+    class kthMSTs {
+        constructor(edges) {
+            this.edges = edges;
+            this.noOfVertices = this.getVerticesNumberInGraph();
         }
 
-        return { spanningTree, totalCost };
-    }
+        getAllMST() {
+            let minimumSpanningTrees = [];
+            let checkedMSTs = new Set();
+            let queue = [];
 
-    function getAllMST(edges) {
-        let minimumSpanningTrees = [];
-        let checkedMSTs = new Set();
-        let queue = [];
+            let initialMST = this.MST();
 
-        let noOfVertices = getVerticesNumberInGraph(edges);
-        let initialMST = MST(edges);
+            queue.push({ mst: initialMST.spanningTree, totalCost: initialMST.totalCost });
+            checkedMSTs.add(this.getMSTKey(initialMST.spanningTree));
 
-        queue.push({ mst: initialMST.spanningTree, totalCost: initialMST.totalCost });
-        checkedMSTs.add(getMSTKey(initialMST.spanningTree));
+            while (queue.length > 0) {
+                let { mst: currentMST, totalCost } = queue.shift();
 
-        while (queue.length > 0) {
-            let { mst: currenMST, totalCost } = queue.shift();
+                minimumSpanningTrees.push({ currentMST, totalCost });
 
-            minimumSpanningTrees.push({ currenMST, totalCost });
+                this.generateNewMST(currentMST, queue, checkedMSTs);
+            }
 
-            // Generate new MST and add it to queue
-            generateNewMST(edges, noOfVertices, currenMST, queue, checkedMSTs);
+            return minimumSpanningTrees.sort((mst1, mst2) => mst1.totalCost - mst2.totalCost);
         }
 
-        return minimumSpanningTrees.sort((mst1, mst2) => mst1.totalCost - mst2.totalCost);
-    }
+        generateNewMST(currentMST, queue, checkedMSTs) {
+            let currentMSTKey = this.getMSTKey(currentMST);
 
-    function generateNewMST(edges, noOfVertices, currenMST, queue, checkedMSTs) {
-        let currenMSTKey = getMSTKey(currenMST);
+            currentMST.forEach(edgeFromMST => {
+                this.edges.forEach(edgeFromAll => {
+                    if (!currentMST.includes(edgeFromAll) &&
+                        this.isValidEdgeReplacement(currentMST, edgeFromMST, edgeFromAll)) {
 
-        currenMST.forEach(edgeFromMST => {
-            edges.forEach(edgeFromAll => {
-                if (!currenMST.includes(edgeFromAll) &&
-                    isValidEdgeReplacement(noOfVertices, currenMST, edgeFromMST, edgeFromAll)) {
+                        let newMST = currentMST.slice();
+                        this.removeEdgeFromArray(newMST, edgeFromMST);
+                        newMST.push(edgeFromAll);
 
-                    let newMST = currenMST.slice();
-                    removeEdgeFromArray(newMST, edgeFromMST);
-                    newMST.push(edgeFromAll);
-
-                    let newMSTKey = getMSTKey(newMST);
-                    if (!checkedMSTs.has(newMSTKey)) {
-                        queue.push({ mst: newMST, totalCost: newMST.reduce((sum, edge) => sum + edge.weight, 0) });
-                        checkedMSTs.add(newMSTKey);
+                        let newMSTKey = this.getMSTKey(newMST);
+                        if (!checkedMSTs.has(newMSTKey)) {
+                            queue.push({ mst: newMST, totalCost: newMST.reduce((sum, edge) => sum + edge.weight, 0) });
+                            checkedMSTs.add(newMSTKey);
+                        }
                     }
-                }
+                });
             });
-        });
-    }
-
-    function getMSTKey(mst) {
-        return mst.map(edge => [edge.vertex1, edge.vertex2].sort().toString()).sort().join(';');
-    }
-
-    function removeEdgeFromArray(array, edgeToRemove) {
-        let removeIndex = array.findIndex(edge =>
-            edge.vertex1 === edgeToRemove.vertex1 && edge.vertex2 === edgeToRemove.vertex2
-        );
-
-        if (removeIndex !== -1) {
-            array.splice(removeIndex, 1);
-        }
-    }
-
-    function isSpanningTreeHasCyle(noOfVertces, spanningTree) {
-
-        let dsu = new DSU(noOfVertces);
-
-        for (let edge of spanningTree) {
-
-            if (dsu.inSameSet(edge.vertex1, edge.vertex2)) return false;// there is a cyle
-
-            dsu.union(edge.vertex1, edge.vertex2);
         }
 
-        return true;
-    }
+        getMSTKey(mst) {
+            return mst.map(edge => [edge.vertex1, edge.vertex2].sort().toString()).sort().join(';');
+        }
 
-    function isValidEdgeReplacement(noOfVertces, currenMST, edgeToRemove, edgeToAdd) {
+        MST() {
+            this.edges.sort((edge1, edge2) => edge1.weight - edge2.weight);
+            let dsuEdges = new DSU(this.noOfVertices);
+            let spanningTree = [];
+            let totalCost = 0;
 
-        let newMST = currenMST.slice();
+            for (const edge of this.edges) {
 
-        removeEdgeFromArray(newMST, edgeToRemove);
+                if (!dsuEdges.inSameSet(edge.vertex1, edge.vertex2)) {
+                    spanningTree.push(edge);
+                    totalCost += edge.weight;
+                    dsuEdges.union(edge.vertex1, edge.vertex2);
+                }
 
-        newMST.push(edgeToAdd);
+                if (spanningTree.length === this.noOfVertices - 1)
+                    break;
+            }
 
-        return isSpanningTreeHasCyle(noOfVertces, newMST);
+            return { spanningTree, totalCost };
+        }
+
+        getVerticesNumberInGraph() {
+            if (!this.edges) return 0;
+
+            const vertices = new Set();
+            this.edges.forEach(edge => {
+                vertices.add(edge.vertex1);
+                vertices.add(edge.vertex2);
+            });
+
+            // in case user input has non-sequential order
+            return Math.max(...vertices);
+        }
+
+        removeEdgeFromArray(array, edgeToRemove) {
+            let removeIndex = array.findIndex(edge =>
+                edge.vertex1 === edgeToRemove.vertex1 && edge.vertex2 === edgeToRemove.vertex2
+            );
+
+            if (removeIndex !== -1) {
+                array.splice(removeIndex, 1);
+            }
+        }
+
+        isSpanningTreeCycles(spanningTree) {
+            let dsu = new DSU(this.noOfVertices);
+
+            for (let edge of spanningTree) {
+                if (dsu.inSameSet(edge.vertex1, edge.vertex2)) return false; // there is a cycle
+
+                dsu.union(edge.vertex1, edge.vertex2);
+            }
+
+            return true;
+        }
+
+        isValidEdgeReplacement(currentMST, edgeToRemove, edgeToAdd) {
+            let newMST = currentMST.slice();
+            this.removeEdgeFromArray(newMST, edgeToRemove);
+            newMST.push(edgeToAdd);
+            return this.isSpanningTreeCycles(newMST);
+        }
     }
 
     let edges = [
         { vertex1: 1, vertex2: 2, weight: 1 },
-        { vertex1: 1, vertex2: 3, weight: 3 },
-        { vertex1: 1, vertex2: 7, weight: 2 },
-        { vertex1: 2, vertex2: 3, weight: 4 }
+        { vertex1: 2, vertex2: 3, weight: 2 },
+        { vertex1: 3, vertex2: 4, weight: 4 },
+        { vertex1: 4, vertex2: 1, weight: 3 },
+        { vertex1: 1, vertex2: 3, weight: 2 },
+        { vertex1: 2, vertex2: 4, weight: 3 }
     ];
 
-    console.log(getAllMST(edges));
+    let MSTs = new kthMSTs(edges);
+
+    console.log(MSTs.getAllMST());
 });
+
+//https://www.geeksforgeeks.org/spanning-tree/
