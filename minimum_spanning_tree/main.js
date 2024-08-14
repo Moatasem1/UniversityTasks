@@ -1,103 +1,181 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-    class Graph {
-
-        #adjacencyList;
-        constructor() {
-            this.#adjacencyList = new Map();
+    class DSU {
+        constructor(size) {
+            this.parent = Array(size + 1).fill(null).map((_, i) => i);
+            this.groupSize = Array(size + 1).fill(1);
+            this.noOfNodes = size;
         }
 
-        #addVertex(vertex) {
-            if (this.#adjacencyList.has(vertex))
-                return;
-
-            this.#adjacencyList.set(vertex, []);
+        isNodeFound(node) {
+            return node > 0 && node <= this.noOfNodes;
         }
 
-        addEdgeFromV1ToV2(vertex1, vertex2, weight) {
-            this.#addVertex(vertex1);
-            this.#addVertex(vertex2);
-
-            let vertex1Neighbors = this.#adjacencyList.get(vertex1);
-            vertex1Neighbors.push({ name: vertex2, weight: weight });
+        getGroupSize(node) {
+            if (!this.isNodeFound(node)) return null;
+            return this.groupSize[this.findParent(node)];
         }
 
-        print() {
-            let result = document.getElementById("result");
-            this.#adjacencyList.forEach((neighbors, key) => {
-                console.log(`key: ${key} => `);
-                neighbors.forEach(neighbor => {
-                    console.log(`(${neighbor.name} / ${neighbor.weight}), `);
-                });
-                console.log("\n");
-            });
+        findParent(node) {
+            if (!this.isNodeFound(node)) return null;
+
+            if (this.parent[node] !== node) {
+                this.parent[node] = this.findParent(this.parent[node]);
+            }
+            return this.parent[node];
         }
 
-        #getUniqueEdges() {
-            let edges = new Set();//ensure each edge is unique
-
-            this.#adjacencyList.forEach((neighbors, key) => {
-                neighbors.forEach(neighbor => {
-
-                    //enuser same edges have same attriube order
-                    let edge = [key, neighbor.name];
-                    edge.sort();
-
-                    edges.add({ vertex1: edge[0], vertex2: edge[1], weight: neighbor.weight });
-                });
-            });
-
-            return edges;
+        inSameSet(node1, node2) {
+            if (!(this.isNodeFound(node1) && this.isNodeFound(node2))) return false;
+            return this.findParent(node1) === this.findParent(node2);
         }
 
-        #IsV1AndV2InSameSet(sets, vertex1, vertex2) {
-            sets.forEach(set => {
-                if (set.includes(vertex1) && set.includes(vertex2)) {
-                    return true;
-                }
-            });
+        union(node1, node2) {
+            if (!(this.isNodeFound(node1) && this.isNodeFound(node2))) return;
 
-            return false;
-        }
+            let node1Parent = this.findParent(node1);
+            let node2Parent = this.findParent(node2);
 
-        minimumSpanningTreeKruskal() {
-            let sets = [];
-            let edges = new Set();//ensure each edge is unique
-            let finalSet = [];
+            if (node1Parent === node2Parent) return;
 
-            //put each vertix in set
-            this.#adjacencyList.forEach(key => {
-                sets.push([key]);
-            });
+            const [largerGroup, smallerGroup] = this.groupSize[node1Parent] >= this.groupSize[node2Parent]
+                ? [node1Parent, node2Parent] : [node2Parent, node1Parent];
 
-            //sort edges by nondecreasing  weight
-            edges = this.#getUniqueEdges();
-            //negative value if first should come first, zero no change, (positive seconde first)
-            edges.sort((edge1, edge2) => edge1.weight - edge2.weight);
-
-            edges.forEach(edge => {
-                let vertex1 = edge.vertex1;
-                let vertex2 = edge.vertex2;
-                if (!this.#IsV1AndV2InSameSet(sets, vertex1, vertex2)) {
-
-                }
-
-            });
+            this.parent[smallerGroup] = largerGroup;
+            this.groupSize[largerGroup] += this.groupSize[smallerGroup];
         }
     }
 
+    function getVerticesNumberInGraph(edges) {
+        if (!edges) return 0;
 
-    let graph = new Graph;
+        const vertices = new Set();
+        edges.forEach(edge => {
+            vertices.add(edge.vertex1);
+            vertices.add(edge.vertex2);
+        });
 
-    graph.addEdgeFromV1ToV2(0, 1, 1);
-    graph.addEdgeFromV1ToV2(0, 2, 2);
-    graph.addEdgeFromV1ToV2(0, 3, 7);
-    graph.addEdgeFromV1ToV2(1, 0, 1);
-    graph.addEdgeFromV1ToV2(1, 2, 4);
-    graph.addEdgeFromV1ToV2(2, 0, 2);
-    graph.addEdgeFromV1ToV2(2, 1, 4);
-    graph.addEdgeFromV1ToV2(3, 0, 7);
+        //in case user input have in non sequentail order
+        return Math.max(...vertices);
+    }
 
-    graph.print();
+    function MST(edges, skipEgde = null) {
 
+        edges.sort((edge1, edge2) => edge1.weight - edge2.weight);
+        let noOfVertces = getVerticesNumberInGraph(edges);
+        let dsuEdges = new DSU(noOfVertces);
+        let spanningTree = [];
+        let totalCost = 0;
+
+        for (const edge of edges) {
+
+            if (edge === skipEgde) {
+                continue;
+            }
+
+            if (!dsuEdges.inSameSet(edge.vertex1, edge.vertex2)) {
+                spanningTree.push(edge);
+                totalCost += edge.weight;
+                dsuEdges.union(edge.vertex1, edge.vertex2);
+            }
+
+
+            if (spanningTree.length == noOfVertces - 1)
+                break;
+        }
+
+        return { spanningTree, totalCost };
+    }
+
+    function getAllMST(edges) {
+        let minimumSpanningTrees = [];
+        let checkedMSTs = new Set();
+        let queue = [];
+
+        let noOfVertices = getVerticesNumberInGraph(edges);
+        let initialMST = MST(edges);
+
+        queue.push({ mst: initialMST.spanningTree, totalCost: initialMST.totalCost });
+        checkedMSTs.add(getMSTKey(initialMST.spanningTree));
+
+        while (queue.length > 0) {
+            let { mst: currenMST, totalCost } = queue.shift();
+
+            minimumSpanningTrees.push({ currenMST, totalCost });
+
+            // Generate new MST and add it to queue
+            generateNewMST(edges, noOfVertices, currenMST, queue, checkedMSTs);
+        }
+
+        return minimumSpanningTrees.sort((mst1, mst2) => mst1.totalCost - mst2.totalCost);
+    }
+
+    function generateNewMST(edges, noOfVertices, currenMST, queue, checkedMSTs) {
+        let currenMSTKey = getMSTKey(currenMST);
+
+        currenMST.forEach(edgeFromMST => {
+            edges.forEach(edgeFromAll => {
+                if (!currenMST.includes(edgeFromAll) &&
+                    isValidEdgeReplacement(noOfVertices, currenMST, edgeFromMST, edgeFromAll)) {
+
+                    let newMST = currenMST.slice();
+                    removeEdgeFromArray(newMST, edgeFromMST);
+                    newMST.push(edgeFromAll);
+
+                    let newMSTKey = getMSTKey(newMST);
+                    if (!checkedMSTs.has(newMSTKey)) {
+                        queue.push({ mst: newMST, totalCost: newMST.reduce((sum, edge) => sum + edge.weight, 0) });
+                        checkedMSTs.add(newMSTKey);
+                    }
+                }
+            });
+        });
+    }
+
+    function getMSTKey(mst) {
+        return mst.map(edge => [edge.vertex1, edge.vertex2].sort().toString()).sort().join(';');
+    }
+
+    function removeEdgeFromArray(array, edgeToRemove) {
+        let removeIndex = array.findIndex(edge =>
+            edge.vertex1 === edgeToRemove.vertex1 && edge.vertex2 === edgeToRemove.vertex2
+        );
+
+        if (removeIndex !== -1) {
+            array.splice(removeIndex, 1);
+        }
+    }
+
+    function isSpanningTreeHasCyle(noOfVertces, spanningTree) {
+
+        let dsu = new DSU(noOfVertces);
+
+        for (let edge of spanningTree) {
+
+            if (dsu.inSameSet(edge.vertex1, edge.vertex2)) return false;// there is a cyle
+
+            dsu.union(edge.vertex1, edge.vertex2);
+        }
+
+        return true;
+    }
+
+    function isValidEdgeReplacement(noOfVertces, currenMST, edgeToRemove, edgeToAdd) {
+
+        let newMST = currenMST.slice();
+
+        removeEdgeFromArray(newMST, edgeToRemove);
+
+        newMST.push(edgeToAdd);
+
+        return isSpanningTreeHasCyle(noOfVertces, newMST);
+    }
+
+    let edges = [
+        { vertex1: 1, vertex2: 2, weight: 1 },
+        { vertex1: 1, vertex2: 3, weight: 3 },
+        { vertex1: 1, vertex2: 7, weight: 2 },
+        { vertex1: 2, vertex2: 3, weight: 4 }
+    ];
+
+    console.log(getAllMST(edges));
 });
