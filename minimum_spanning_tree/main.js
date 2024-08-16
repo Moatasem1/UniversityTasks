@@ -67,17 +67,17 @@ document.addEventListener("DOMContentLoaded", () => {
     function drawAllGraphs(MSTs) {
         let coutner = 1;
         MSTs.forEach(mst => {
-            createGraphContainerEl(coutner, mst.totalCost);
+            createGraphContainerEl(coutner);
             drawGraph(coutner, mst.currentMST);
             coutner++;
         });
     }
 
-    function createGraphContainerEl(id, cost) {
+    function createGraphContainerEl(id) {
         let graphContainerEl = document.createElement('div');
 
         graphContainerEl.innerHTML = `<div class="mt-5">
-                                            <h3 class="fw-semibold">Spanning Tree ${id} - Cost (${cost}):</h3>
+                                            <h3 class="fw-semibold">Spanning Tree ${id}</h3>
                                             <div class="rounded graph-wrapper" id="${id}"></div>
                                         </div>`;
 
@@ -95,7 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
         graphsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
         drawGraph("orginalGraph", edges);
         let MSTs = new kthMSTs(edges);
-        console.log(MSTs.getAllMST());
         drawAllGraphs(MSTs.getAllMST());
     });
 
